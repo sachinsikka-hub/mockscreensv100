@@ -1,0 +1,715 @@
+import { useState } from "react";
+
+const C = {
+  navy: "#0D1B2A",
+  navy2: "#0A1520",
+  gold: "#B8945F",
+  goldL: "#C9A96E",
+  cream: "#FAF8F4",
+  tx: "#2C3038",
+  tm: "#6B7280",
+  tf: "#9CA3AF",
+  bd: "#E8E3DB",
+  green: "#27AE60",
+  lgreen: "#D5F5E3",
+  red: "#A93226",
+  lred: "#FADBD8",
+  amber: "#B7770D",
+  lamber: "#FDEBD0",
+  teal: "#0E6655",
+  lteal: "#D1F2EB",
+  lnavy: "#D6EAF8",
+  lgrey: "#F4F5F7",
+  mgrey: "#CDD0D4",
+};
+
+const styles = {
+  wrap: { fontFamily: "'DM Sans', system-ui, sans-serif", background: C.cream, minHeight: "100vh", fontSize: 13 },
+  topbar: { background: C.navy, padding: "0 20px", display: "flex", alignItems: "center", gap: 16, height: 48, borderBottom: `2px solid ${C.gold}` },
+  topbrand: { color: C.gold, fontWeight: 700, fontSize: 11, letterSpacing: 4, textTransform: "uppercase" },
+  topsep: { color: "rgba(255,255,255,0.2)", fontSize: 16 },
+  topscreen: { color: "rgba(255,255,255,0.6)", fontSize: 11 },
+  sidebar: { width: 200, background: C.navy2, minHeight: "calc(100vh - 48px)", padding: "16px 0", flexShrink: 0 },
+  navitem: (active) => ({ padding: "8px 16px", cursor: "pointer", fontSize: 11, fontWeight: active ? 700 : 400,
+    color: active ? C.gold : "rgba(255,255,255,0.5)", background: active ? "rgba(184,148,95,0.12)" : "transparent",
+    borderLeft: active ? `3px solid ${C.gold}` : "3px solid transparent",
+    display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }),
+  navcat: { padding: "16px 16px 6px", fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: 3, textTransform: "uppercase", fontWeight: 700 },
+  content: { flex: 1, padding: 24, overflow: "auto" },
+  card: { background: "white", borderRadius: 6, border: `1px solid ${C.bd}`, padding: 20, marginBottom: 16 },
+  cardTitle: { fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 4 },
+  cardSub: { color: C.tm, fontSize: 11, marginBottom: 16 },
+  label: { fontSize: 10, fontWeight: 700, color: C.tm, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4, display: "block" },
+  input: { width: "100%", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "8px 10px", fontSize: 12, color: C.tx, outline: "none", boxSizing: "border-box" },
+  btn: (v="primary") => ({ padding: "8px 16px", borderRadius: 4, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 11,
+    background: v==="primary" ? C.gold : v==="danger" ? C.red : v==="ghost" ? "transparent" : C.lgrey,
+    color: v==="primary" ? "white" : v==="danger" ? "white" : v==="ghost" ? C.tm : C.navy,
+    border: v==="ghost" ? `1px solid ${C.bd}` : "none" }),
+  badge: (c="grey") => ({ display: "inline-block", padding: "2px 8px", borderRadius: 3, fontSize: 10, fontWeight: 700,
+    background: c==="green" ? C.lgreen : c==="red" ? C.lred : c==="amber" ? C.lamber : c==="navy" ? C.lnavy : c==="teal" ? C.lteal : C.lgrey,
+    color: c==="green" ? C.green : c==="red" ? C.red : c==="amber" ? C.amber : c==="navy" ? C.navy : c==="teal" ? C.teal : C.tm }),
+  grade: (g) => ({ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 4, fontWeight: 900, fontSize: 14,
+    background: g==="A" ? C.lgreen : g==="B" ? C.lnavy : g==="C" ? C.lamber : g==="D" ? C.lred : C.lgrey,
+    color: g==="A" ? C.green : g==="B" ? C.navy : g==="C" ? C.amber : g==="D" ? C.red : C.tm }),
+  table: { width: "100%", borderCollapse: "collapse", fontSize: 11 },
+  th: { background: C.navy, color: C.goldL, padding: "6px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, letterSpacing: 0.5 },
+  td: { padding: "7px 10px", borderBottom: `1px solid ${C.bd}`, verticalAlign: "top" },
+  row: (i) => ({ background: i%2===0 ? "white" : C.lgrey }),
+  sla: (pct) => ({ height: 4, borderRadius: 2, background: pct > 75 ? C.red : pct > 50 ? C.amber : C.green, width: `${pct}%`, transition: "width 0.3s" }),
+  slaTrack: { height: 4, borderRadius: 2, background: C.lgrey, width: "100%", overflow: "hidden", marginTop: 2 },
+};
+
+// ── SHARED COMPONENTS ────────────────────────────────────────────────────────
+const GradeBlock = ({ block, grade, label }) => (
+  <div style={{ textAlign: "center", padding: "10px 6px" }}>
+    <div style={styles.grade(grade)}>{grade}</div>
+    <div style={{ fontSize: 9, color: C.tm, marginTop: 4, lineHeight: 1.3 }}>{block}</div>
+    <div style={{ fontSize: 8, color: C.tf }}>{label}</div>
+  </div>
+);
+
+const Tag = ({ children, color }) => <span style={styles.badge(color)}>{children}</span>;
+
+const Divider = () => <div style={{ height: 1, background: C.bd, margin: "12px 0" }} />;
+
+const SLABar = ({ pct, label }) => (
+  <div style={{ marginBottom: 8 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.tm, marginBottom: 2 }}>
+      <span>{label}</span><span style={{ color: pct>75?C.red:pct>50?C.amber:C.green, fontWeight:700 }}>{pct}%</span>
+    </div>
+    <div style={styles.slaTrack}><div style={styles.sla(pct)} /></div>
+  </div>
+);
+
+// ── SCREEN 0 — BLIND SPOT PREVIEW ────────────────────────────────────────────
+const Screen0 = () => (
+  <div style={{ maxWidth: 520, margin: "0 auto" }}>
+    <div style={{ background: C.navy, borderRadius: 8, padding: "36px 32px", color: "white", marginBottom: 20, textAlign: "center" }}>
+      <div style={{ fontSize: 9, color: C.gold, letterSpacing: 4, fontWeight: 700, marginBottom: 12, textTransform: "uppercase" }}>The Unfinished</div>
+      <h2 style={{ color: "white", fontWeight: 700, fontSize: 22, margin: "0 0 8px" }}>Get Your Portfolio Blind Spot Preview</h2>
+      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Upload your CAMS CAS and we'll surface 3 key findings within 24 hours. Free. No commitment.</p>
+    </div>
+    <div style={styles.card}>
+      <div style={{ marginBottom: 14 }}>
+        <label style={styles.label}>Your Name <span style={{ color: C.red }}>*</span></label>
+        <input style={styles.input} placeholder="Full name" defaultValue="Sachin Gupta" />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={styles.label}>Email Address <span style={{ color: C.red }}>*</span></label>
+        <input style={styles.input} placeholder="you@example.com" defaultValue="sachin@example.com" />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={styles.label}>Mobile (optional)</label>
+        <input style={styles.input} placeholder="+91 98765 43210" />
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <label style={styles.label}>Upload CAMS CAS (PDF) <span style={{ color: C.red }}>*</span></label>
+        <div style={{ border: `2px dashed ${C.bd}`, borderRadius: 6, padding: "24px 16px", textAlign: "center", background: C.lgrey }}>
+          <div style={{ fontSize: 22, marginBottom: 6 }}>📎</div>
+          <div style={{ fontWeight: 700, color: C.navy, fontSize: 12, marginBottom: 4 }}>portfolio_cas_march2026.pdf</div>
+          <div style={{ fontSize: 10, color: C.green, fontWeight: 700 }}>✓ Valid PDF · 2.4 MB · Not password-protected</div>
+          <div style={{ fontSize: 10, color: C.tm, marginTop: 6 }}>Click to replace</div>
+        </div>
+      </div>
+      <div style={{ background: C.lnavy, borderRadius: 4, padding: "10px 12px", marginBottom: 16, fontSize: 11, color: C.navy }}>
+        <strong>What you'll receive in 24 hours:</strong> One finding shown in full detail, two more as headlines to preview. Your overall portfolio band. A follow-up call from our lead evaluator.
+      </div>
+      <button style={{ ...styles.btn("primary"), width: "100%", padding: "12px", fontSize: 13 }}>Get My Blind Spot Preview →</button>
+      <div style={{ textAlign: "center", fontSize: 10, color: C.tf, marginTop: 10 }}>No commissions. No products. Independent evaluation only.</div>
+    </div>
+    <div style={{ textAlign: "center", padding: "8px", background: C.lred, borderRadius: 6, display: "none" }}>
+      <span style={{ fontSize: 11, color: C.red }}>⚠ This document is password-protected. Please upload an unencrypted version.</span>
+    </div>
+  </div>
+);
+
+// ── SCREEN 1 — CLIENT INTAKE PORTAL ─────────────────────────────────────────
+const Screen1 = () => {
+  const [step, setStep] = useState(1);
+  return (
+    <div style={{ maxWidth: 620, margin: "0 auto" }}>
+      <div style={{ ...styles.card, background: C.navy, color: "white", padding: "14px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 9, color: C.gold, letterSpacing: 3, fontWeight: 700 }}>ENGAGEMENT · TU-2026-MF-0047 · TIER 2</div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Comprehensive Portfolio Evaluation</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Submission deadline</div>
+            <div style={{ color: C.amber, fontWeight: 700, fontSize: 12 }}>3 days remaining</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 0, marginTop: 14 }}>
+          {["Profile","Documents","Goals"].map((s,i) => (
+            <div key={s} onClick={() => setStep(i+1)} style={{ flex: 1, textAlign: "center", padding: "8px 4px", cursor: "pointer",
+              borderBottom: step===i+1 ? `2px solid ${C.gold}` : "2px solid rgba(255,255,255,0.1)",
+              color: step===i+1 ? C.gold : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: step===i+1 ? 700 : 400 }}>
+              <span style={{ marginRight: 4 }}>{i+1<step?"✓":i+1}</span>{s}
+            </div>
+          ))}
+        </div>
+      </div>
+      {step===1 && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Step 1 — Your Profile</div>
+          <div style={styles.cardSub}>Pre-filled from your registration. Please verify.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[["Full Name","Priya Sharma"],["PAN Number","ABCPS1234P"],["Date of Birth","15 / 08 / 1981"],["Mobile","+91 98765 43210"],["Email","priya.sharma@email.com"],["City","Mumbai"]].map(([l,v]) => (
+              <div key={l}><label style={styles.label}>{l}</label><input style={styles.input} defaultValue={v} /></div>
+            ))}
+          </div>
+          <div style={{ marginTop: 16, textAlign: "right" }}>
+            <button style={styles.btn("primary")} onClick={() => setStep(2)}>Continue to Documents →</button>
+          </div>
+        </div>
+      )}
+      {step===2 && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Step 2 — Upload Documents</div>
+          <div style={styles.cardSub}>Documents required for Tier 2 — Comprehensive Evaluation</div>
+          {[
+            { name: "CAMS CAS (Mutual Funds)", status: "validated", required: true, size: "2.4 MB" },
+            { name: "KFintech CAS (if applicable)", status: "not_uploaded", required: false },
+            { name: "Demat Statement (CDSL/NSDL)", status: "validated", required: false, size: "1.1 MB" },
+            { name: "Goal & Profile Questionnaire", status: "pending", required: true, note: "Complete in Step 3" },
+          ].map(doc => (
+            <div key={doc.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${C.bd}` }}>
+              <div style={{ fontSize: 20 }}>{doc.status==="validated"?"✅":doc.status==="pending"?"🔄":"📋"}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 12 }}>{doc.name} {doc.required && <span style={{ color: C.red }}>*</span>}</div>
+                <div style={{ fontSize: 10, color: doc.status==="validated"?C.green:doc.status==="pending"?C.amber:C.tf }}>
+                  {doc.status==="validated"?`Validated · ${doc.size}`:doc.status==="pending"?doc.note:"Not uploaded · Optional"}
+                </div>
+              </div>
+              {doc.status!=="pending" && <button style={styles.btn("ghost")}>{doc.status==="validated"?"Replace":"Upload"}</button>}
+            </div>
+          ))}
+          <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between" }}>
+            <button style={styles.btn("ghost")} onClick={() => setStep(1)}>← Back</button>
+            <button style={styles.btn("primary")} onClick={() => setStep(3)}>Continue to Goals →</button>
+          </div>
+        </div>
+      )}
+      {step===3 && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Step 3 — Goals & Profile</div>
+          <div style={styles.cardSub}>Required for Tier 2. All fields marked * are mandatory.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[["Primary Goal *","Wealth Growth"],["Risk Tolerance *","Moderate"],["Retirement Age *","60"],["Current Age","43"],["Monthly Income Range *","₹5L – ₹10L"],["Monthly SIP Amount *","₹1,20,000"]].map(([l,v]) => (
+              <div key={l}><label style={styles.label}>{l}</label><input style={styles.input} defaultValue={v} /></div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={styles.label}>Number of Children & Ages</label>
+            <input style={styles.input} defaultValue="2 children — ages 14 and 10" />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={styles.label}>Major Planned Expenses (next 5 years) — Optional</label>
+            <input style={styles.input} placeholder="e.g. home purchase 2027, daughter's education 2028" />
+          </div>
+          <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button style={styles.btn("ghost")} onClick={() => setStep(2)}>← Back</button>
+            <button style={{ ...styles.btn("primary"), padding: "10px 24px", fontSize: 13 }}>Submit Intake ✓</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── SCREEN 2 — OPS VIEW ──────────────────────────────────────────────────────
+const Screen2 = () => (
+  <div>
+    <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+      {[["Total Active","14",C.navy],["Ready to Evaluate","3",C.green],["Data Incomplete","4",C.amber],["SLA Warning","2",C.red]].map(([l,v,c]) => (
+        <div key={l} style={{ flex: 1, ...styles.card, padding: "14px 16px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: c }}>{v}</div>
+          <div style={{ fontSize: 10, color: C.tm, marginTop: 2 }}>{l}</div>
+        </div>
+      ))}
+    </div>
+    <div style={styles.card}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={styles.cardTitle}>Active Submissions Pipeline</div>
+        <button style={styles.btn("ghost")}>Filter ▾</button>
+      </div>
+      <table style={styles.table}>
+        <thead><tr>
+          {["Engagement ID","Client / IFA","Tier","Status","SLA Remaining","Action"].map(h => <th key={h} style={styles.th}>{h}</th>)}
+        </tr></thead>
+        <tbody>
+          {[
+            { id:"TU-2026-MF-0047", name:"Priya Sharma (Direct)", tier:"T2", status:"Ready to Evaluate", sla:62, slac:"green" },
+            { id:"TU-2026-MF-0048", name:"Arjun Capital / HDFC IFA", tier:"T3", status:"Ready to Evaluate", sla:88, slac:"red" },
+            { id:"TU-2026-MF-0045", name:"Mehta Family (Direct)", tier:"T3", status:"Data Incomplete", sla:0, slac:"grey" },
+            { id:"TU-2026-MF-0046", name:"Clarity Wealth / IFA", tier:"T1", status:"Awaiting Intake", sla:0, slac:"grey" },
+            { id:"TU-2026-MF-0044", name:"Sunita Rao (Direct)", tier:"T2", status:"Evaluation In Progress", sla:41, slac:"amber" },
+          ].map((r,i) => (
+            <tr key={r.id} style={styles.row(i)}>
+              <td style={styles.td}><span style={{ fontFamily: "monospace", fontSize: 11, color: C.navy, fontWeight: 700 }}>{r.id}</span></td>
+              <td style={styles.td}>{r.name}</td>
+              <td style={styles.td}><Tag color="navy">{r.tier}</Tag></td>
+              <td style={styles.td}><Tag color={r.status==="Ready to Evaluate"?"teal":r.status==="Data Incomplete"?"amber":r.status==="Evaluation In Progress"?"navy":"grey"}>{r.status}</Tag></td>
+              <td style={styles.td}>
+                {r.sla>0 ? <>
+                  <div style={{ fontSize: 10, color: r.slac==="red"?C.red:r.slac==="amber"?C.amber:C.green, fontWeight: 700, marginBottom: 2 }}>{r.sla}% elapsed</div>
+                  <div style={styles.slaTrack}><div style={styles.sla(r.sla)} /></div>
+                </> : <span style={{ color: C.tf, fontSize: 10 }}>Timer not started</span>}
+              </td>
+              <td style={styles.td}>
+                {r.status==="Ready to Evaluate" && <button style={{ ...styles.btn("primary"), fontSize: 10, padding: "4px 10px" }}>Mark Complete ✓</button>}
+                {r.status==="Data Incomplete" && <button style={{ ...styles.btn("ghost"), fontSize: 10, padding: "4px 10px" }}>Request Docs</button>}
+                {r.status==="Awaiting Intake" && <button style={{ ...styles.btn("ghost"), fontSize: 10, padding: "4px 10px" }}>View Details</button>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+// ── SCREEN 3 — EVALUATION CONSOLE ────────────────────────────────────────────
+const Screen3 = () => {
+  const [selected, setSelected] = useState("PS-07");
+  const factors = [
+    { id:"PS-01", name:"Asset Allocation", grade:"D", status:"evaluated" },
+    { id:"PS-02", name:"Equity-Debt-Gold", grade:"D", status:"evaluated" },
+    { id:"PS-03", name:"Market Cap Dist.", grade:"C", status:"evaluated" },
+    { id:"PS-05", name:"AMC Concentration", grade:"B", status:"evaluated" },
+    { id:"PS-07", name:"Single Fund Conc.", grade:"C", status:"evaluated", active:true },
+    { id:"CA-01", name:"Blended TER", grade:"A", status:"evaluated" },
+    { id:"CA-02", name:"Direct vs Regular", grade:"A", status:"evaluated" },
+    { id:"CA-06", name:"IDCW vs Growth", grade:"A", status:"evaluated" },
+    { id:"OR-01", name:"Folio Duplication", grade:"C", status:"evaluated" },
+    { id:"OR-03", name:"Unique Positions", grade:"C", status:"evaluated" },
+    { id:"GA-01", name:"Corpus Sufficiency", grade:null, status:"not_evaluated" },
+    { id:"IP-01", name:"Life Cover", grade:null, status:"not_evaluated" },
+  ];
+  return (
+    <div style={{ display: "flex", gap: 16, height: "calc(100vh - 120px)" }}>
+      {/* Left: portfolio summary */}
+      <div style={{ width: 180, flexShrink: 0 }}>
+        <div style={{ ...styles.card, padding: 14 }}>
+          <div style={{ fontSize: 9, color: C.tm, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Portfolio Summary</div>
+          {[["Total AUM","₹89.1L"],["Schemes","21"],["Fund Houses","7"],["Direct Plans","99.9%"],["Debt %","0%"]].map(([l,v]) => (
+            <div key={l} style={{ display:"flex", justifyContent:"space-between", fontSize:11, borderBottom:`1px solid ${C.bd}`, padding:"4px 0" }}>
+              <span style={{ color:C.tm }}>{l}</span><span style={{ fontWeight:700, color:v==="0%"?C.red:C.navy }}>{v}</span>
+            </div>
+          ))}
+          <Divider />
+          <div style={{ fontSize: 9, color: C.tm, fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Scope Coverage</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.navy }}>10 / 55 factors</div>
+          <div style={{ fontSize: 10, color: C.amber }}>8 NE (missing docs)</div>
+        </div>
+      </div>
+      {/* Centre: factor list */}
+      <div style={{ width: 200, flexShrink: 0, overflow: "auto" }}>
+        <div style={styles.card}>
+          <div style={{ fontSize: 9, color: C.tm, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>PS — Portfolio Structure</div>
+          {factors.filter(f=>f.id.startsWith("PS")).map(f => (
+            <div key={f.id} onClick={() => setSelected(f.id)} style={{ display:"flex", gap:8, alignItems:"center", padding:"6px 8px", borderRadius:4, cursor:"pointer",
+              background: selected===f.id ? C.lnavy : "transparent", marginBottom:2 }}>
+              <div style={f.status==="not_evaluated"?{...styles.grade(f.grade),background:C.lgrey,color:C.tf}:styles.grade(f.grade)}>{f.grade||"NE"}</div>
+              <div style={{ fontSize:10, color: selected===f.id ? C.navy : C.tx, fontWeight: selected===f.id ? 700:400 }}>{f.name}</div>
+            </div>
+          ))}
+          <div style={{ fontSize: 9, color: C.tm, fontWeight: 700, margin:"12px 0 8px", textTransform:"uppercase", letterSpacing:1 }}>CA — Cost Architecture</div>
+          {factors.filter(f=>f.id.startsWith("CA")).map(f => (
+            <div key={f.id} onClick={() => setSelected(f.id)} style={{ display:"flex", gap:8, alignItems:"center", padding:"6px 8px", borderRadius:4, cursor:"pointer",
+              background: selected===f.id ? C.lnavy : "transparent", marginBottom:2 }}>
+              <div style={styles.grade(f.grade)}>{f.grade}</div>
+              <div style={{ fontSize:10 }}>{f.name}</div>
+            </div>
+          ))}
+          <div style={{ fontSize: 9, color: C.tm, fontWeight: 700, margin:"12px 0 8px", textTransform:"uppercase", letterSpacing:1 }}>GA / IP — Not Evaluated</div>
+          {factors.filter(f=>f.status==="not_evaluated").map(f => (
+            <div key={f.id} style={{ display:"flex", gap:8, alignItems:"center", padding:"6px 8px", opacity:0.5, marginBottom:2 }}>
+              <div style={{ ...styles.grade(null), background:C.lgrey, color:C.tf }}>NE</div>
+              <div style={{ fontSize:10, color:C.tf }}>{f.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Right: finding editor */}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={styles.card}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+            <div>
+              <div style={{ fontFamily:"monospace", fontSize:10, color:C.gold, fontWeight:700 }}>PS-07 · Portfolio Structure</div>
+              <div style={{ fontWeight:700, fontSize:14, color:C.navy }}>Single Fund Concentration Risk</div>
+            </div>
+            <div style={styles.grade("C")}>C</div>
+          </div>
+          <div style={{ background:C.lamber, borderRadius:4, padding:"8px 12px", fontSize:11, marginBottom:14 }}>
+            <strong>Data inputs:</strong> SBI Small Cap Fund = ₹25.78L = 28.9% of total AUM. Threshold: 20%. Excess: 8.9 percentage points.
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={styles.label}>Severity</label>
+            <div style={{ display:"flex", gap:8 }}>
+              {["High","Medium","Low","Positive"].map(s => (
+                <button key={s} style={{ ...styles.btn("ghost"), fontSize:10, padding:"4px 10px", background:s==="High"?C.red:"transparent", color:s==="High"?"white":C.tm, border:`1px solid ${s==="High"?C.red:C.bd}` }}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={styles.label}>Layer 1 — Analyst Detail (technical, not shared with client)</label>
+            <textarea style={{ ...styles.input, minHeight:80, resize:"vertical", fontFamily:"inherit" }} defaultValue="SBI Small Cap Fund accounts for 28.9% of the evaluated portfolio (₹25.78L of ₹89.1L). This exceeds the 20% single-fund concentration threshold by 8.9 percentage points. Small cap category carries high volatility (3Y std dev ~22%). The fund underperformed its benchmark (S&P BSE Small Cap TRI) by 1.2% over 3Y. The concentration is partly explained by the 10-Apr-2026 partial switch-out (₹35,101 to SBI Gold Fund) which has not yet meaningfully reduced the position." />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={styles.label}>Layer 2 — Client Narrative (plain English, forward-looking)</label>
+            <textarea style={{ ...styles.input, minHeight:72, resize:"vertical", fontFamily:"inherit" }} defaultValue="Your largest holding — SBI Small Cap Fund — makes up nearly 29% of your portfolio. For context, best practice is to keep any single fund below 20%. We are not suggesting an emergency exit, but this is the first position we will plan to reduce gradually as part of your rebalancing conversation." />
+            <div style={{ fontSize:10, color:C.green, marginTop:4 }}>✓ Text is distinct from Layer 1</div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={styles.label}>Recommendation</label>
+            <input style={styles.input} defaultValue="Gradually reduce SBI Small Cap exposure from 28.9% to below 20% over 2–3 STP cycles. Redirect to a large-cap index fund (e.g. Nifty 50 Direct) to add anchor position." />
+          </div>
+          <div style={{ display:"flex", gap:10 }}>
+            <button style={styles.btn("ghost")}>← Previous Factor</button>
+            <button style={styles.btn("ghost")}>Next Factor →</button>
+            <button style={{ ...styles.btn("primary"), marginLeft:"auto" }}>Submit All for Review ✓</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 4 — LEAD EVALUATOR REVIEW ────────────────────────────────────────
+const Screen4 = () => (
+  <div>
+    <div style={{ ...styles.card, background:C.navy, color:"white", padding:"14px 20px", marginBottom:16 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div>
+          <div style={{ fontSize:9, color:C.gold, letterSpacing:3, fontWeight:700 }}>TU-2026-MF-0047 · TIER 2 · PRIYA SHARMA</div>
+          <div style={{ fontWeight:700, fontSize:16 }}>Lead Evaluator Review Console</div>
+        </div>
+        <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>Overall Grade</div>
+            <div style={{ fontSize:28, fontWeight:900, color:C.amber }}>C+</div>
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>SLA Status</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.green }}>18 hrs remaining</div>
+          </div>
+          <button style={{ ...styles.btn("primary"), padding:"10px 20px", fontSize:12, opacity:0.4, cursor:"not-allowed" }}>🔒 Execute Data Lock</button>
+        </div>
+      </div>
+      <div style={{ display:"flex", gap:4, marginTop:14, flexWrap:"wrap" }}>
+        {[["PS","D"],["CA","A"],["OR","C"],["AQ","B"],["RC","D"],["GA","NE"],["IP","NE"],["ES","B"]].map(([b,g]) => (
+          <div key={b} style={{ textAlign:"center", background:"rgba(255,255,255,0.06)", borderRadius:4, padding:"6px 10px", minWidth:50 }}>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.4)", marginBottom:2 }}>{b}</div>
+            <div style={{ fontWeight:900, fontSize:14, color:g==="A"?C.green:g==="B"?"#60A5FA":g==="C"?C.amber:g==="D"?C.red:"rgba(255,255,255,0.25)" }}>{g}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+      {[
+        { id:"PS-01", block:"PS", name:"Asset Allocation vs Risk Profile", grade:"D", sev:"High", status:"pending", detail:"Portfolio is 99.9% equity, 0% debt. Client risk profile is 'Moderate'. This is a direct contradiction requiring immediate attention." },
+        { id:"PS-07", block:"PS", name:"Single Fund Concentration", grade:"C", sev:"High", status:"approved", detail:"SBI Small Cap at 28.9% — exceeds 20% threshold by 8.9pp. Partial switch-out on 10-Apr-2026 noted." },
+        { id:"CA-02", block:"CA", name:"Direct vs Regular Plan", grade:"A", sev:"Positive", status:"approved", detail:"99.9% Direct plans. Only one legacy Regular folio (₹892 — negligible). Trail savings ~₹7,200/year." },
+        { id:"OR-01", block:"OR", name:"Folio Duplication", grade:"C", sev:"Medium", status:"returned", detail:"5 confirmed duplicate folio pairs across HDFC Flexi Cap, HDFC Midcap 150, SBI ELSS, ICICI Tech, and SBI Small Cap." },
+      ].map(f => (
+        <div key={f.id} style={{ ...styles.card, borderLeft:`3px solid ${f.status==="approved"?C.green:f.status==="returned"?C.red:C.bd}` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+            <div>
+              <span style={{ fontFamily:"monospace", fontSize:10, color:C.gold, fontWeight:700, marginRight:8 }}>{f.id}</span>
+              <Tag color={f.grade==="A"?"green":f.grade==="B"?"navy":f.grade==="C"?"amber":"red"}>{f.grade}</Tag>
+            </div>
+            <Tag color={f.sev==="High"?"red":f.sev==="Medium"?"amber":f.sev==="Positive"?"green":"grey"}>{f.sev}</Tag>
+          </div>
+          <div style={{ fontWeight:700, fontSize:12, marginBottom:6, color:C.navy }}>{f.name}</div>
+          <div style={{ fontSize:11, color:C.tm, marginBottom:10, lineHeight:1.5 }}>{f.detail}</div>
+          {f.status==="pending" && (
+            <div style={{ display:"flex", gap:8 }}>
+              <button style={{ ...styles.btn("primary"), fontSize:10, padding:"4px 10px" }}>✓ Approve</button>
+              <button style={{ ...styles.btn("ghost"), fontSize:10, padding:"4px 10px" }}>✎ Modify</button>
+              <button style={{ ...styles.btn("danger"), fontSize:10, padding:"4px 10px" }}>↩ Return</button>
+            </div>
+          )}
+          {f.status==="approved" && <Tag color="green">✓ Approved</Tag>}
+          {f.status==="returned" && <Tag color="red">↩ Returned for revision</Tag>}
+        </div>
+      ))}
+    </div>
+    <div style={{ ...styles.card, background:C.lamber, border:`1px solid ${C.amber}` }}>
+      <div style={{ fontWeight:700, color:C.amber, marginBottom:4 }}>⚠ Data Lock Not Yet Available</div>
+      <div style={{ fontSize:11, color:C.tx }}>2 findings are pending your review. Approve or return all findings before executing the data lock.</div>
+    </div>
+  </div>
+);
+
+// ── SCREEN 5 — CLIENT REPORT PORTAL ─────────────────────────────────────────
+const Screen5 = () => {
+  const [tab, setTab] = useState("summary");
+  return (
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <div style={{ ...styles.card, background:C.navy, color:"white", padding:"20px 24px" }}>
+        <div style={{ fontSize:9, color:C.gold, fontWeight:700, letterSpacing:3, marginBottom:6 }}>THE UNFINISHED · INDEPENDENT PORTFOLIO EVALUATION · APRIL 2026</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+          <div>
+            <h2 style={{ color:"white", fontWeight:700, fontSize:20, margin:"0 0 4px" }}>Your Portfolio Evaluation</h2>
+            <div style={{ color:"rgba(255,255,255,0.5)", fontSize:12 }}>Priya Sharma · ₹89.1L · 21 schemes · April 2026</div>
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:4 }}>Overall Grade</div>
+            <div style={{ fontSize:48, fontWeight:900, color:C.amber, lineHeight:1 }}>C+</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:4 }}>Needs attention</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:0, marginTop:16 }}>
+          {["summary","report","actions","documents"].map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ flex:1, background:"transparent", border:"none", cursor:"pointer",
+              padding:"8px 4px", color:tab===t?C.gold:"rgba(255,255,255,0.35)", fontWeight:tab===t?700:400,
+              fontSize:11, borderBottom:tab===t?`2px solid ${C.gold}`:"2px solid transparent", textTransform:"capitalize" }}>{t==="actions"?"Actions (10)":t==="report"?"Full Report":t.charAt(0).toUpperCase()+t.slice(1)}</button>
+          ))}
+        </div>
+      </div>
+      {tab==="summary" && (
+        <div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10, marginBottom:16 }}>
+            {[["PS · Structure","D"],["CA · Cost","A"],["OR · Overlap","C"],["AQ · Advisor","B"]].map(([l,g]) => (
+              <div key={l} style={{ ...styles.card, textAlign:"center", padding:"12px 8px" }}>
+                <div style={styles.grade(g)}>{g}</div>
+                <div style={{ fontSize:9, color:C.tm, marginTop:6 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>3 Most Important Findings</div>
+            <div style={styles.cardSub}>Start with these in your review conversation.</div>
+            {[
+              { n:1, head:"Your portfolio has zero debt allocation", detail:"Your entire portfolio is in equity. We recommend building a debt buffer — even ₹10–15 lakhs in a liquid fund — as a safety layer.", sev:"High" },
+              { n:2, head:"Your largest holding is too concentrated", detail:"SBI Small Cap Fund is 29% of your portfolio. Best practice is under 20%. We have a plan to reduce this gradually.", sev:"High" },
+              { n:3, head:"Five funds are held in duplicate folios", detail:"The same scheme in multiple folios creates admin complexity. Consolidating will simplify your portfolio significantly.", sev:"Medium" },
+            ].map(f => (
+              <div key={f.n} style={{ borderLeft:`3px solid ${f.sev==="High"?C.red:C.amber}`, paddingLeft:12, marginBottom:14 }}>
+                <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:4 }}>
+                  <span style={{ background:f.sev==="High"?C.red:C.amber, color:"white", borderRadius:"50%", width:18, height:18, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0 }}>{f.n}</span>
+                  <span style={{ fontWeight:700, fontSize:12, color:C.navy }}>{f.head}</span>
+                  <Tag color={f.sev==="High"?"red":"amber"}>{f.sev}</Tag>
+                </div>
+                <div style={{ fontSize:11, color:C.tm, lineHeight:1.5 }}>{f.detail}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {tab==="actions" && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Your Action Register</div>
+          <div style={styles.cardSub}>10 recommendations · Update your status as you act on each</div>
+          <table style={styles.table}>
+            <thead><tr>{["#","Recommendation","Priority","Your Status",""].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
+            <tbody>
+              {[
+                { n:1, rec:"Start a liquid fund SIP of ₹50,000/month to build debt buffer", p:"High", status:"Accepted" },
+                { n:2, rec:"Set up STP from SBI Small Cap to Nifty 50 Index — ₹5,000/month", p:"High", status:"Pending" },
+                { n:3, rec:"Consolidate HDFC Flexi Cap folios (3 folios → 1)", p:"Medium", status:"In Progress" },
+                { n:4, rec:"Switch ICICI Tech folio duplication to primary folio", p:"Medium", status:"Pending" },
+                { n:5, rec:"Review SBI Gold Fund switch on 10-Apr — was this intentional?", p:"Medium", status:"Deferred" },
+              ].map((r,i) => (
+                <tr key={r.n} style={styles.row(i)}>
+                  <td style={styles.td}><span style={{ fontWeight:700, color:C.navy }}>{r.n}</span></td>
+                  <td style={styles.td}><span style={{ fontSize:11 }}>{r.rec}</span></td>
+                  <td style={styles.td}><Tag color={r.p==="High"?"red":"amber"}>{r.p}</Tag></td>
+                  <td style={styles.td}><Tag color={r.status==="Accepted"?"green":r.status==="In Progress"?"teal":r.status==="Deferred"?"amber":"grey"}>{r.status}</Tag></td>
+                  <td style={styles.td}><button style={{ ...styles.btn("ghost"), fontSize:10, padding:"3px 8px" }}>Update</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── SCREEN 6 — RETAINER DASHBOARD ────────────────────────────────────────────
+const Screen6 = () => (
+  <div>
+    <div style={{ display:"flex", gap:12, marginBottom:16, alignItems:"flex-start" }}>
+      <div style={{ flex:1, ...styles.card, background:C.navy, color:"white" }}>
+        <div style={{ fontSize:9, color:C.gold, fontWeight:700, letterSpacing:3 }}>RETAINER · TIER 2 · Q3 CYCLE</div>
+        <div style={{ fontWeight:700, fontSize:18, margin:"4px 0" }}>Priya Sharma</div>
+        <div style={{ display:"flex", gap:24, marginTop:10 }}>
+          {[["Next Cycle","Q4 · Jan 2027"],["Annual Renewal","92 days"],["Grade Trend","↑ Improving"]].map(([l,v]) => (
+            <div key={l}>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.4)" }}>{l}</div>
+              <div style={{ fontWeight:700, color:v.includes("↑")?C.green:C.gold }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ width:200, ...styles.card }}>
+        <div style={styles.cardTitle}>Upload Updated CAS</div>
+        <div style={{ fontSize:10, color:C.tm, marginBottom:10 }}>Last uploaded: 15 Oct 2026</div>
+        <button style={{ ...styles.btn("primary"), width:"100%", fontSize:11 }}>Upload CAMS CAS ↑</button>
+      </div>
+    </div>
+    <div style={{ ...styles.card, background:C.lred, border:`1px solid ${C.red}`, marginBottom:16 }}>
+      <div style={{ fontWeight:700, color:C.red, marginBottom:6 }}>⚠ 2 Unacknowledged High-Priority Alerts</div>
+      <div style={{ display:"flex", gap:10 }}>
+        {[
+          { type:"Allocation Drift", detail:"Equity drifted to 81% — target 70%. ±5% tolerance exceeded." },
+          { type:"Regular Plan Detected", detail:"New Regular plan folio detected in Oct CAS — SBI Balanced Advantage." },
+        ].map(a => (
+          <div key={a.type} style={{ flex:1, background:"white", borderRadius:4, padding:"10px 12px", border:`1px solid ${C.red}` }}>
+            <div style={{ fontWeight:700, fontSize:11, color:C.red, marginBottom:4 }}>{a.type}</div>
+            <div style={{ fontSize:11, color:C.tx, marginBottom:8 }}>{a.detail}</div>
+            <button style={{ ...styles.btn("ghost"), fontSize:10, padding:"3px 10px" }}>Acknowledge</button>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+      <div style={styles.card}>
+        <div style={styles.cardTitle}>Portfolio Drift — Q3 Monitor</div>
+        <table style={styles.table}>
+          <thead><tr>{["Asset Class","Target","Q2","Q3","Δ"].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
+          <tbody>
+            {[["Equity","70%","75%","<span style='color:#A93226;font-weight:700'>81%</span>","+6pp"],["Debt","15%","13%","11%","−4pp"],["Gold","8%","9%","6%","−3pp"],["Cash","7%","3%","2%","−1pp"]].map(([c,t,q2,q3,d],i) => (
+              <tr key={c} style={styles.row(i)}><td style={styles.td}>{c}</td><td style={styles.td}>{t}</td><td style={styles.td}>{q2}</td><td style={styles.td} dangerouslySetInnerHTML={{ __html:q3 }} /><td style={styles.td}>{d}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={styles.card}>
+        <div style={styles.cardTitle}>Open Recommendations</div>
+        {[
+          { n:1, rec:"Start liquid fund SIP ₹50K/month", status:"In Progress", age:"6 months" },
+          { n:2, rec:"Reduce SBI Small Cap to below 20%", status:"Pending", age:"6 months" },
+          { n:5, rec:"Review SBI Gold Fund switch (Apr 26)", status:"Deferred", age:"Revisit Dec 2026" },
+        ].map((r,i) => (
+          <div key={r.n} style={{ display:"flex", gap:10, alignItems:"center", padding:"8px 0", borderBottom:i<2?`1px solid ${C.bd}`:"none" }}>
+            <div style={{ fontWeight:700, color:C.navy, fontSize:12, width:16 }}>{r.n}</div>
+            <div style={{ flex:1, fontSize:11 }}>{r.rec}</div>
+            <Tag color={r.status==="In Progress"?"teal":r.status==="Deferred"?"amber":"grey"}>{r.status}</Tag>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// ── SCREEN 7 — ADMIN CONSOLE ─────────────────────────────────────────────────
+const Screen7 = () => (
+  <div>
+    <div style={{ display:"flex", gap:12, marginBottom:16 }}>
+      {[["Active Engagements","14",C.navy],["SLA Warnings","2",C.red],["Open Alerts","5",C.amber],["IFA Partners","8",C.teal]].map(([l,v,c]) => (
+        <div key={l} style={{ flex:1, ...styles.card, textAlign:"center", padding:"12px 10px" }}>
+          <div style={{ fontSize:24, fontWeight:900, color:c }}>{v}</div>
+          <div style={{ fontSize:10, color:C.tm, marginTop:2 }}>{l}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:16 }}>
+      <div style={styles.card}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <div style={styles.cardTitle}>Engagement Pipeline</div>
+          <div style={{ display:"flex", gap:8 }}>
+            <button style={{ ...styles.btn("ghost"), fontSize:10 }}>Export CSV</button>
+            <button style={{ ...styles.btn("primary"), fontSize:10 }}>+ New Engagement</button>
+          </div>
+        </div>
+        <table style={styles.table}>
+          <thead><tr>{["ID","Client","Tier","Status","SLA"].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
+          <tbody>
+            {[
+              { id:"0047", c:"Priya Sharma", t:"T2", s:"Evaluation In Progress", sla:41, sc:"amber" },
+              { id:"0048", c:"Arjun Capital/IFA", t:"T3", s:"Ready to Evaluate", sla:88, sc:"red" },
+              { id:"0049", c:"Mehta Family", t:"T3", s:"Data Incomplete", sla:0, sc:"grey" },
+              { id:"0050", c:"Sanjay Shah", t:"T1", s:"Delivered", sla:100, sc:"green" },
+            ].map((r,i) => (
+              <tr key={r.id} style={styles.row(i)}>
+                <td style={styles.td}><span style={{ fontFamily:"monospace", fontSize:10, fontWeight:700 }}>TU-2026-MF-{r.id}</span></td>
+                <td style={styles.td}>{r.c}</td>
+                <td style={styles.td}><Tag color="navy">{r.t}</Tag></td>
+                <td style={styles.td}><span style={{ fontSize:10 }}>{r.s}</span></td>
+                <td style={styles.td}>
+                  {r.sla>0 ? <div style={styles.slaTrack}><div style={styles.sla(r.sla)} /></div> : <span style={{ color:C.tf, fontSize:10 }}>—</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div style={{ ...styles.card, marginBottom:12 }}>
+          <div style={styles.cardTitle}>AMFI Data Status</div>
+          <div style={{ fontSize:11, color:C.tm, marginBottom:8 }}>Last refresh: Today 06:30 IST</div>
+          {[["NAVAll.txt","✓ 1,847 schemes"],["mfapi.in","✓ Connected"],["Enricher","✓ Last run 2h ago"]].map(([l,v]) => (
+            <div key={l} style={{ display:"flex", justifyContent:"space-between", fontSize:11, borderBottom:`1px solid ${C.bd}`, padding:"4px 0" }}>
+              <span style={{ color:C.tm }}>{l}</span><span style={{ color:C.green, fontWeight:700 }}>{v}</span>
+            </div>
+          ))}
+          <button style={{ ...styles.btn("ghost"), width:"100%", marginTop:10, fontSize:10 }}>↻ Manual Refresh</button>
+        </div>
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Alert Queue</div>
+          {[
+            { type:"Allocation Drift", client:"Priya Sharma", sev:"High" },
+            { type:"Regular Plan Detected", client:"Priya Sharma", sev:"High" },
+            { type:"Fund Q4 Drop", client:"Arjun Capital", sev:"Medium" },
+          ].map((a,i) => (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:i<2?`1px solid ${C.bd}`:"none" }}>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700 }}>{a.type}</div>
+                <div style={{ fontSize:10, color:C.tm }}>{a.client}</div>
+              </div>
+              <Tag color={a.sev==="High"?"red":"amber"}>{a.sev}</Tag>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── MAIN APP ─────────────────────────────────────────────────────────────────
+const SCREENS = [
+  { id:"s0", label:"Screen 0", sub:"Blind Spot Preview", icon:"🔍", component:Screen0 },
+  { id:"s1", label:"Screen 1", sub:"Client Intake Portal", icon:"📝", component:Screen1 },
+  { id:"s2", label:"Screen 2", sub:"Ops Submission View", icon:"🗂", component:Screen2 },
+  { id:"s3", label:"Screen 3", sub:"Evaluation Console", icon:"⚡", component:Screen3 },
+  { id:"s4", label:"Screen 4", sub:"Lead Evaluator Review", icon:"✅", component:Screen4 },
+  { id:"s5", label:"Screen 5", sub:"Client Report Portal", icon:"📊", component:Screen5 },
+  { id:"s6", label:"Screen 6", sub:"Retainer Dashboard", icon:"🔄", component:Screen6 },
+  { id:"s7", label:"Screen 7", sub:"Admin Console", icon:"⚙️", component:Screen7 },
+];
+
+export default function App() {
+  const [active, setActive] = useState("s0");
+  const current = SCREENS.find(s => s.id === active);
+  const Component = current.component;
+
+  return (
+    <div style={styles.wrap}>
+      <div style={styles.topbar}>
+        <div style={styles.topbrand}>The Unfinished</div>
+        <span style={styles.topsep}>·</span>
+        <div style={styles.topscreen}>{current.icon} {current.label} — {current.sub}</div>
+      </div>
+      <div style={{ display:"flex" }}>
+        <div style={styles.sidebar}>
+          <div style={styles.navcat}>Product Screens</div>
+          {SCREENS.map(s => (
+            <div key={s.id} style={styles.navitem(active===s.id)} onClick={() => setActive(s.id)}>
+              <span style={{ fontSize:14 }}>{s.icon}</span>
+              <div>
+                <div>{s.label}</div>
+                <div style={{ fontSize:9, opacity:0.6, fontWeight:400 }}>{s.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={styles.content}>
+          <Component />
+        </div>
+      </div>
+    </div>
+  );
+}
