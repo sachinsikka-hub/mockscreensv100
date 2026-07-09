@@ -1,0 +1,858 @@
+{
+  "workouts": [
+    {
+      "date": "2026-07-06",
+      "duration_min": 25,
+      "avg_hr": 60,
+      "max_hr": 77,
+      "calories": 84,
+      "zones": [
+        26,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-07-05",
+      "duration_min": 113,
+      "avg_hr": 129,
+      "max_hr": 164,
+      "calories": 870,
+      "zones": [
+        6,
+        49,
+        56,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "duration_min": 60,
+      "avg_hr": 125,
+      "max_hr": 164,
+      "calories": 439,
+      "zones": [
+        11,
+        20,
+        28,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "duration_min": 63,
+      "avg_hr": 113,
+      "max_hr": 148,
+      "calories": 369,
+      "zones": [
+        24,
+        30,
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-06-07",
+      "duration_min": 120,
+      "avg_hr": 128,
+      "max_hr": 165,
+      "calories": 919,
+      "zones": [
+        14,
+        50,
+        48,
+        9,
+        0
+      ]
+    },
+    {
+      "date": "2026-06-04",
+      "duration_min": 65,
+      "avg_hr": 124,
+      "max_hr": 167,
+      "calories": 479,
+      "zones": [
+        10,
+        31,
+        23,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "duration_min": 54,
+      "avg_hr": 101,
+      "max_hr": 145,
+      "calories": 262,
+      "zones": [
+        35,
+        18,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-28",
+      "duration_min": 71,
+      "avg_hr": 124,
+      "max_hr": 161,
+      "calories": 491,
+      "zones": [
+        14,
+        28,
+        24,
+        5,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-26",
+      "duration_min": 56,
+      "avg_hr": 102,
+      "max_hr": 144,
+      "calories": 264,
+      "zones": [
+        38,
+        15,
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-24",
+      "duration_min": 119,
+      "avg_hr": 131,
+      "max_hr": 162,
+      "calories": 968,
+      "zones": [
+        12,
+        29,
+        65,
+        12,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-21",
+      "duration_min": 61,
+      "avg_hr": 139,
+      "max_hr": 175,
+      "calories": 545,
+      "zones": [
+        6,
+        12,
+        20,
+        23,
+        1
+      ]
+    },
+    {
+      "date": "2026-05-19",
+      "duration_min": 60,
+      "avg_hr": 117,
+      "max_hr": 154,
+      "calories": 374,
+      "zones": [
+        22,
+        19,
+        18,
+        1,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "duration_min": 54,
+      "avg_hr": 103,
+      "max_hr": 139,
+      "calories": 239,
+      "zones": [
+        40,
+        13,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "duration_min": 67,
+      "avg_hr": 127,
+      "max_hr": 168,
+      "calories": 492,
+      "zones": [
+        15,
+        21,
+        21,
+        11,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "duration_min": 21,
+      "avg_hr": 169,
+      "max_hr": 193,
+      "calories": 245,
+      "zones": [
+        0,
+        0,
+        2,
+        5,
+        14
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "duration_min": 13,
+      "avg_hr": 130,
+      "max_hr": 151,
+      "calories": 150,
+      "zones": [
+        0,
+        15,
+        8,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-07",
+      "duration_min": 68,
+      "avg_hr": 112,
+      "max_hr": 149,
+      "calories": 351,
+      "zones": [
+        28,
+        37,
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-06",
+      "duration_min": 76,
+      "avg_hr": 138,
+      "max_hr": 167,
+      "calories": 679,
+      "zones": [
+        3,
+        10,
+        52,
+        12,
+        0
+      ]
+    },
+    {
+      "date": "2026-05-01",
+      "duration_min": 124,
+      "avg_hr": 127,
+      "max_hr": 158,
+      "calories": 888,
+      "zones": [
+        5,
+        70,
+        47,
+        1,
+        0
+      ]
+    },
+    {
+      "date": "2026-04-28",
+      "duration_min": 74,
+      "avg_hr": 136,
+      "max_hr": 167,
+      "calories": 647,
+      "zones": [
+        1,
+        17,
+        49,
+        7,
+        0
+      ]
+    },
+    {
+      "date": "2026-04-26",
+      "duration_min": 126,
+      "avg_hr": 127,
+      "max_hr": 161,
+      "calories": 903,
+      "zones": [
+        11,
+        57,
+        55,
+        4,
+        0
+      ]
+    },
+    {
+      "date": "2026-04-22",
+      "duration_min": 58,
+      "avg_hr": 128,
+      "max_hr": 170,
+      "calories": 429,
+      "zones": [
+        11,
+        16,
+        24,
+        8,
+        0
+      ]
+    },
+    {
+      "date": "2026-04-12",
+      "duration_min": 115,
+      "avg_hr": 131,
+      "max_hr": 178,
+      "calories": 886,
+      "zones": [
+        11,
+        41,
+        44,
+        18,
+        1
+      ]
+    },
+    {
+      "date": "2026-04-09",
+      "duration_min": 67,
+      "avg_hr": 121,
+      "max_hr": 163,
+      "calories": 427,
+      "zones": [
+        24,
+        22,
+        18,
+        4,
+        0
+      ]
+    },
+    {
+      "date": "2026-04-02",
+      "duration_min": 72,
+      "avg_hr": 130,
+      "max_hr": 181,
+      "calories": 542,
+      "zones": [
+        14,
+        15,
+        26,
+        16,
+        1
+      ]
+    },
+    {
+      "date": "2026-03-29",
+      "duration_min": 121,
+      "avg_hr": 119,
+      "max_hr": 180,
+      "calories": 752,
+      "zones": [
+        43,
+        43,
+        26,
+        5,
+        5
+      ]
+    },
+    {
+      "date": "2026-03-26",
+      "duration_min": 56,
+      "avg_hr": 121,
+      "max_hr": 153,
+      "calories": 352,
+      "zones": [
+        11,
+        30,
+        16,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-25",
+      "duration_min": 74,
+      "avg_hr": 139,
+      "max_hr": 176,
+      "calories": 616,
+      "zones": [
+        4,
+        14,
+        34,
+        22,
+        1
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "duration_min": 143,
+      "avg_hr": 116,
+      "max_hr": 154,
+      "calories": 771,
+      "zones": [
+        48,
+        76,
+        19,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-20",
+      "duration_min": 61,
+      "avg_hr": 125,
+      "max_hr": 182,
+      "calories": 398,
+      "zones": [
+        15,
+        24,
+        17,
+        2,
+        3
+      ]
+    },
+    {
+      "date": "2026-03-18",
+      "duration_min": 72,
+      "avg_hr": 130,
+      "max_hr": 169,
+      "calories": 526,
+      "zones": [
+        8,
+        26,
+        34,
+        5,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-16",
+      "duration_min": 67,
+      "avg_hr": 108,
+      "max_hr": 144,
+      "calories": 317,
+      "zones": [
+        41,
+        24,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-10",
+      "duration_min": 65,
+      "avg_hr": 112,
+      "max_hr": 169,
+      "calories": 342,
+      "zones": [
+        33,
+        27,
+        4,
+        1,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-09",
+      "duration_min": 77,
+      "avg_hr": 124,
+      "max_hr": 165,
+      "calories": 512,
+      "zones": [
+        9,
+        43,
+        23,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-05",
+      "duration_min": 82,
+      "avg_hr": 112,
+      "max_hr": 158,
+      "calories": 417,
+      "zones": [
+        37,
+        40,
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-04",
+      "duration_min": 65,
+      "avg_hr": 105,
+      "max_hr": 142,
+      "calories": 309,
+      "zones": [
+        48,
+        15,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-03-01",
+      "duration_min": 132,
+      "avg_hr": 124,
+      "max_hr": 162,
+      "calories": 907,
+      "zones": [
+        21,
+        66,
+        40,
+        3,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-26",
+      "duration_min": 70,
+      "avg_hr": 129,
+      "max_hr": 162,
+      "calories": 524,
+      "zones": [
+        10,
+        27,
+        30,
+        4,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-24",
+      "duration_min": 60,
+      "avg_hr": 124,
+      "max_hr": 177,
+      "calories": 420,
+      "zones": [
+        10,
+        27,
+        23,
+        1,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-23",
+      "duration_min": 66,
+      "avg_hr": 118,
+      "max_hr": 156,
+      "calories": 393,
+      "zones": [
+        17,
+        34,
+        14,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-18",
+      "duration_min": 64,
+      "avg_hr": 119,
+      "max_hr": 150,
+      "calories": 425,
+      "zones": [
+        16,
+        35,
+        14,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-17",
+      "duration_min": 70,
+      "avg_hr": 118,
+      "max_hr": 152,
+      "calories": 425,
+      "zones": [
+        23,
+        28,
+        18,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-15",
+      "duration_min": 132,
+      "avg_hr": 125,
+      "max_hr": 167,
+      "calories": 863,
+      "zones": [
+        22,
+        57,
+        40,
+        10,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "duration_min": 72,
+      "avg_hr": 117,
+      "max_hr": 160,
+      "calories": 404,
+      "zones": [
+        31,
+        22,
+        17,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-11",
+      "duration_min": 65,
+      "avg_hr": 107,
+      "max_hr": 139,
+      "calories": 302,
+      "zones": [
+        38,
+        27,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-08",
+      "duration_min": 119,
+      "avg_hr": 130,
+      "max_hr": 168,
+      "calories": 785,
+      "zones": [
+        2,
+        52,
+        57,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-06",
+      "duration_min": 66,
+      "avg_hr": 123,
+      "max_hr": 161,
+      "calories": 396,
+      "zones": [
+        7,
+        43,
+        16,
+        1,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-04",
+      "duration_min": 70,
+      "avg_hr": 122,
+      "max_hr": 156,
+      "calories": 422,
+      "zones": [
+        11,
+        38,
+        22,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-02-01",
+      "duration_min": 133,
+      "avg_hr": 127,
+      "max_hr": 174,
+      "calories": 764,
+      "zones": [
+        16,
+        66,
+        35,
+        15,
+        2
+      ]
+    },
+    {
+      "date": "2026-01-30",
+      "duration_min": 63,
+      "avg_hr": 127,
+      "max_hr": 158,
+      "calories": 417,
+      "zones": [
+        7,
+        27,
+        28,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-28",
+      "duration_min": 71,
+      "avg_hr": 122,
+      "max_hr": 160,
+      "calories": 429,
+      "zones": [
+        23,
+        24,
+        22,
+        3,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-25",
+      "duration_min": 129,
+      "avg_hr": 127,
+      "max_hr": 164,
+      "calories": 829,
+      "zones": [
+        18,
+        45,
+        61,
+        3,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-24",
+      "duration_min": 59,
+      "avg_hr": 134,
+      "max_hr": 161,
+      "calories": 402,
+      "zones": [
+        1,
+        16,
+        35,
+        7,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-22",
+      "duration_min": 57,
+      "avg_hr": 138,
+      "max_hr": 168,
+      "calories": 394,
+      "zones": [
+        4,
+        14,
+        18,
+        21,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-20",
+      "duration_min": 64,
+      "avg_hr": 110,
+      "max_hr": 142,
+      "calories": 293,
+      "zones": [
+        36,
+        24,
+        4,
+        0,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-18",
+      "duration_min": 82,
+      "avg_hr": 146,
+      "max_hr": 173,
+      "calories": 586,
+      "zones": [
+        3,
+        7,
+        32,
+        38,
+        2
+      ]
+    },
+    {
+      "date": "2026-01-14",
+      "duration_min": 61,
+      "avg_hr": 122,
+      "max_hr": 158,
+      "calories": 322,
+      "zones": [
+        8,
+        38,
+        11,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-11",
+      "duration_min": 119,
+      "avg_hr": 127,
+      "max_hr": 177,
+      "calories": 689,
+      "zones": [
+        14,
+        60,
+        29,
+        7,
+        6
+      ]
+    },
+    {
+      "date": "2026-01-07",
+      "duration_min": 72,
+      "avg_hr": 119,
+      "max_hr": 157,
+      "calories": 382,
+      "zones": [
+        19,
+        34,
+        14,
+        2,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-04",
+      "duration_min": 130,
+      "avg_hr": 125,
+      "max_hr": 168,
+      "calories": 812,
+      "zones": [
+        31,
+        48,
+        35,
+        13,
+        0
+      ]
+    },
+    {
+      "date": "2026-01-02",
+      "duration_min": 73,
+      "avg_hr": 122,
+      "max_hr": 165,
+      "calories": 433,
+      "zones": [
+        13,
+        29,
+        24,
+        1,
+        0
+      ]
+    }
+  ]
+}
