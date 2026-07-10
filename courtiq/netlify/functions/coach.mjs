@@ -2,7 +2,7 @@
 // browser bundle — the client posts the data digest + question here, and this
 // function is the only thing that ever talks to Anthropic.
 const MODEL = 'claude-sonnet-5';
-const MAX_TOKENS = 400;
+const MAX_TOKENS = 600;
 const MAX_HISTORY = 6;
 const MAX_HISTORY_CHARS = 400;
 
@@ -60,6 +60,12 @@ export default async (req) => {
         body: JSON.stringify({
           model: MODEL,
           max_tokens: MAX_TOKENS,
+          // This model uses extended thinking by default, which otherwise
+          // burns the whole max_tokens budget on internal reasoning before
+          // any visible answer -- that's what caused "empty response from
+          // model" with stop_reason "max_tokens" in production. A short
+          // coaching chat reply doesn't need visible chain-of-thought.
+          thinking: { type: 'disabled' },
           system: system || undefined,
           messages: anthropicMessages,
         }),
