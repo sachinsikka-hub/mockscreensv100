@@ -1,7 +1,10 @@
 // Server-side proxy for the CourtIQ coach. Keeps ANTHROPIC_API_KEY out of the
 // browser bundle — the client posts the data digest + question here, and this
 // function is the only thing that ever talks to Anthropic.
-const MODEL = 'claude-sonnet-5';
+// Haiku over Sonnet here specifically for latency: Netlify's synchronous
+// function limit is a hard ~10s ceiling, and Sonnet 5 responses were landing
+// right at that edge (see thinking-disable fix below plus commit history).
+const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 600;
 const MAX_HISTORY = 6;
 const MAX_HISTORY_CHARS = 400;
@@ -60,11 +63,11 @@ export default async (req) => {
         body: JSON.stringify({
           model: MODEL,
           max_tokens: MAX_TOKENS,
-          // This model uses extended thinking by default, which otherwise
-          // burns the whole max_tokens budget on internal reasoning before
-          // any visible answer -- that's what caused "empty response from
-          // model" with stop_reason "max_tokens" in production. A short
-          // coaching chat reply doesn't need visible chain-of-thought.
+          // Extended thinking (when a model defaults to it) burns the whole
+          // max_tokens budget on internal reasoning before any visible
+          // answer -- caused "empty response from model" with Sonnet 5 in
+          // production. A short coaching chat reply doesn't need visible
+          // chain-of-thought, so keep it off regardless of model.
           thinking: { type: 'disabled' },
           system: system || undefined,
           messages: anthropicMessages,
