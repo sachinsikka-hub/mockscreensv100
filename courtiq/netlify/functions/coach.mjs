@@ -10,6 +10,20 @@ const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 220;
 const MAX_HISTORY = 6;
 const MAX_HISTORY_CHARS = 400;
+const MAX_WORDS = 90;
+
+// Backstop for response length -- the system prompt asks for ~80 words, but
+// models don't reliably self-enforce a word count, and max_tokens alone either
+// lets long responses through (plenty of tokens left) or cuts mid-sentence
+// (too few). Truncate at the last sentence boundary within budget instead.
+function enforceWordCap(text) {
+  const words = text.split(/\s+/);
+  if (words.length <= MAX_WORDS) return text;
+  const truncated = words.slice(0, MAX_WORDS).join(' ');
+  const lastStop = Math.max(truncated.lastIndexOf('. '), truncated.lastIndexOf('? '), truncated.lastIndexOf('! '));
+  if (lastStop > truncated.length * 0.4) return truncated.slice(0, lastStop + 1);
+  return `${truncated}…`;
+}
 
 export default async (req) => {
   try {
@@ -87,11 +101,12 @@ export default async (req) => {
     }
 
     const data = await upstream.json();
-    const text = (data.content || []).find((b) => b.type === 'text')?.text || '';
-    if (!text) {
+    const rawText = (data.content || []).find((b) => b.type === 'text')?.text || '';
+    if (!rawText) {
       console.error('[coach] empty response from model, raw data:', JSON.stringify(data));
       return new Response(JSON.stringify({ error: 'Empty response from model' }), { status: 502 });
     }
+    const text = enforceWordCap(rawText);
 
     return new Response(JSON.stringify({ text }), { status: 200, headers: { 'content-type': 'application/json' } });
   } catch (e) {
