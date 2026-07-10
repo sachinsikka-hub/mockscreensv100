@@ -2,8 +2,9 @@
 // browser bundle — the client posts the data digest + question here, and this
 // function is the only thing that ever talks to Anthropic.
 const MODEL = 'claude-sonnet-5';
-const MAX_TOKENS = 600;
-const MAX_HISTORY = 10;
+const MAX_TOKENS = 400;
+const MAX_HISTORY = 6;
+const MAX_HISTORY_CHARS = 400;
 
 export default async (req) => {
   if (req.method !== 'POST') {
@@ -27,11 +28,12 @@ export default async (req) => {
     return new Response(JSON.stringify({ error: 'Missing question' }), { status: 400 });
   }
 
+  const truncate = (s) => (s.length > MAX_HISTORY_CHARS ? `${s.slice(0, MAX_HISTORY_CHARS)}…` : s);
   const history = Array.isArray(messages) ? messages.slice(-MAX_HISTORY) : [];
   const anthropicMessages = [
     ...history
       .filter((m) => m && typeof m.text === 'string')
-      .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
+      .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: truncate(m.text) })),
     {
       role: 'user',
       content: `Current data snapshot (JSON, computed directly from the athlete's real session/health data — treat every number as ground truth, never invent or estimate beyond it):\n${digest || '{}'}\n\nAthlete's message: ${question}`,
