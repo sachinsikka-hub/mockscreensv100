@@ -2,3 +2,6 @@
 base = "courtiq"
 command = "npm run build"
 publish = "dist"
+
+[functions]
+directory = "netlify/functions"
