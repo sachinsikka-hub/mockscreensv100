@@ -608,12 +608,17 @@ export default function BadmintonOS() {
   async function askCoach(question) {
     setCoachLoading(true);
     const digest = buildDataDigest({ enriched, tab, totals, readiness, streak, acwr, trend, thenVsNow, hrBenchmark, bests, typeBreakdown, settings, sleepTrend, hrvTrend, rhrTrend, vo2Trend, weightTrend, bodyFatTrend });
-    const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+    // Keep history short — a longer prompt means longer Claude generation time,
+    // and Netlify's function execution limit is a hard 10s ceiling.
+    const history = messages.slice(-6).map((m) => ({ role: m.role, text: m.text }));
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
     try {
       const res = await fetch('/api/coach', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ system: COURTIQ_SYSTEM_PROMPT, digest, messages: history, question }),
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error(`coach endpoint returned ${res.status}`);
       const data = await res.json();
@@ -622,6 +627,7 @@ export default function BadmintonOS() {
     } catch (e) {
       pushBot(localFallback(question));
     } finally {
+      clearTimeout(timeout);
       setCoachLoading(false);
     }
   }
