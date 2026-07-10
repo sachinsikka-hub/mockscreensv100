@@ -590,6 +590,42 @@ export default function BadmintonOS() {
     }
   }
 
+  // Offline fallback when the LLM call fails (no API key configured, network
+  // down, upstream error) — keeps the coach usable, just less flexible.
+  function localFallback(text) {
+    if (DEFAULT_CHIPS.includes(text)) return coachAnswer(text);
+    const low = text.toLowerCase();
+    if (low.includes('trend')) return coachAnswer('How am I trending?');
+    if (low.includes('ready') || low.includes('recover')) return coachAnswer('Am I ready today?');
+    if (low.includes('streak')) return coachAnswer('Show my streak');
+    if (low.includes('best') || low.includes('pr')) return coachAnswer('Personal bests');
+    if (low.includes('injury') || low.includes('risk') || low.includes('acwr') || low.includes('workload')) return coachAnswer('Injury risk check');
+    if (low.includes('improv') || low.includes('progress') || low.includes('better')) return coachAnswer('Am I improving?');
+    if (low.includes('benchmark') || low.includes('competitive') || low.includes('compare to')) return coachAnswer('Vs competitive benchmark');
+    return "I can talk trend, readiness, injury risk, progress, benchmarks, streaks, and bests right now — or tap a chip below.";
+  }
+
+  async function askCoach(question) {
+    setCoachLoading(true);
+    const digest = buildDataDigest({ enriched, tab, totals, readiness, streak, acwr, trend, thenVsNow, hrBenchmark, bests, typeBreakdown, settings, sleepTrend, hrvTrend, rhrTrend, vo2Trend, weightTrend, bodyFatTrend });
+    const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+    try {
+      const res = await fetch('/api/coach', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ system: COURTIQ_SYSTEM_PROMPT, digest, messages: history, question }),
+      });
+      if (!res.ok) throw new Error(`coach endpoint returned ${res.status}`);
+      const data = await res.json();
+      if (!data.text) throw new Error('empty coach response');
+      pushBot(data.text);
+    } catch (e) {
+      pushBot(localFallback(question));
+    } finally {
+      setCoachLoading(false);
+    }
+  }
+
   function handleChip(chip) {
     // flows
     if (flow === 'tagLast') {
@@ -634,7 +670,7 @@ export default function BadmintonOS() {
       pushUser(chip); pushBot('How long was it?'); setFlow('quickAddDuration'); return;
     }
     if (chip === 'Load sample sessions') { pushUser(chip); addSample(); pushBot('Loaded 12 sample sessions so you can see the engine in action.'); return; }
-    pushUser(chip); pushBot(coachAnswer(chip));
+    pushUser(chip); askCoach(chip);
   }
 
   function handleTextSubmit() {
@@ -642,15 +678,7 @@ export default function BadmintonOS() {
     if (!text) return;
     setInputText('');
     pushUser(text);
-    const low = text.toLowerCase();
-    if (low.includes('trend')) pushBot(coachAnswer('How am I trending?'));
-    else if (low.includes('ready') || low.includes('recover')) pushBot(coachAnswer('Am I ready today?'));
-    else if (low.includes('streak')) pushBot(coachAnswer('Show my streak'));
-    else if (low.includes('best') || low.includes('pr')) pushBot(coachAnswer('Personal bests'));
-    else if (low.includes('injury') || low.includes('risk') || low.includes('acwr') || low.includes('workload')) pushBot(coachAnswer('Injury risk check'));
-    else if (low.includes('improv') || low.includes('progress') || low.includes('better')) pushBot(coachAnswer('Am I improving?'));
-    else if (low.includes('benchmark') || low.includes('competitive') || low.includes('compare to')) pushBot(coachAnswer('Vs competitive benchmark'));
-    else pushBot("I can talk trend, readiness, injury risk, progress, benchmarks, streaks, and bests right now — or tap a chip below.");
+    askCoach(text);
   }
 
 
