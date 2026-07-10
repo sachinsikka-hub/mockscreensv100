@@ -620,11 +620,15 @@ export default function BadmintonOS() {
         body: JSON.stringify({ system: COURTIQ_SYSTEM_PROMPT, digest, messages: history, question }),
         signal: controller.signal,
       });
-      if (!res.ok) throw new Error(`coach endpoint returned ${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(`coach endpoint returned ${res.status}: ${errBody?.error || '(no error detail)'} ${errBody?.detail || ''}`);
+      }
       const data = await res.json();
       if (!data.text) throw new Error('empty coach response');
       pushBot(data.text);
     } catch (e) {
+      console.error('[askCoach] falling back to rule-based coach:', e);
       pushBot(localFallback(question));
     } finally {
       clearTimeout(timeout);
