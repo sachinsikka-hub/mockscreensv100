@@ -29,10 +29,13 @@ export default async (req) => {
   }
 
   const truncate = (s) => (s.length > MAX_HISTORY_CHARS ? `${s.slice(0, MAX_HISTORY_CHARS)}…` : s);
-  const history = Array.isArray(messages) ? messages.slice(-MAX_HISTORY) : [];
+  let history = Array.isArray(messages) ? messages.slice(-MAX_HISTORY) : [];
+  history = history.filter((m) => m && typeof m.text === 'string');
+  // Anthropic requires the conversation to open on a user turn — the app's
+  // hardcoded assistant greeting bubble would otherwise lead the history.
+  while (history.length && history[0].role !== 'user') history = history.slice(1);
   const anthropicMessages = [
     ...history
-      .filter((m) => m && typeof m.text === 'string')
       .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: truncate(m.text) })),
     {
       role: 'user',
