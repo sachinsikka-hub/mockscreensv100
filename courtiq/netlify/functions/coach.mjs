@@ -5,7 +5,9 @@
 // function limit is a hard ~10s ceiling, and Sonnet 5 responses were landing
 // right at that edge (see thinking-disable fix below plus commit history).
 const MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 600;
+// System prompt caps replies at ~80 words; this is a hard backstop against
+// that drifting, not the primary length control.
+const MAX_TOKENS = 220;
 const MAX_HISTORY = 6;
 const MAX_HISTORY_CHARS = 400;
 
