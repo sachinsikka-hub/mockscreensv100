@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Activity, Upload, Plus, Heart, ChevronRight, X, Flame, Award, Gauge, Tag, Send } from 'lucide-react';
+import { Activity, Upload, Plus, Heart, ChevronRight, X, Flame, Award, Gauge, Tag, Send, Camera } from 'lucide-react';
 import { storage } from './storage.js';
 
 // ---------- design tokens ----------
@@ -79,6 +79,15 @@ function zonesFromSamples(samples, maxHR) {
   samples.forEach((s) => { const hr = s.value ?? s.Avg ?? s.avg ?? s.qty; if (typeof hr === 'number') zones[zoneOfHR(hr, maxHR)] += perSample; });
   return zones.map((m) => Math.round(m));
 }
+function estimateZonesFromAvgHR(dur, avg) {
+  const intensity = Math.min(1, Math.max(0, (avg - 90) / 80));
+  const z5 = Math.round(dur * (0.05 + intensity * 0.25));
+  const z4 = Math.round(dur * (0.10 + intensity * 0.25));
+  const z3 = Math.round(dur * 0.30);
+  const z2 = Math.round(dur * 0.25);
+  const z1 = Math.max(0, dur - z5 - z4 - z3 - z2);
+  return [z1, z2, z3, z4, z5];
+}
 function inferType(w) {
   const raw = (w.type || w.workoutType || w.activity || '').toString().toLowerCase();
   if (raw.includes('match') || raw.includes('tournament') || raw.includes('competitive')) return 'match';
@@ -112,15 +121,7 @@ function parseImport(raw, maxHR) {
       const computed = zonesFromSamples(rawSamples, maxHR);
       if (computed) { zones = computed; zonesSource = 'measured'; }
     }
-    if (!zones) {
-      const intensity = Math.min(1, Math.max(0, (avg - 90) / 80));
-      const z5 = Math.round(dur * (0.05 + intensity * 0.25));
-      const z4 = Math.round(dur * (0.10 + intensity * 0.25));
-      const z3 = Math.round(dur * 0.30);
-      const z2 = Math.round(dur * 0.25);
-      const z1 = Math.max(0, dur - z5 - z4 - z3 - z2);
-      zones = [z1, z2, z3, z4, z5]; zonesSource = 'estimated';
-    }
+    if (!zones) { zones = estimateZonesFromAvgHR(dur, avg); zonesSource = 'estimated'; }
     return { id: uid(), date: dateStr.slice(0, 10), duration_min: dur, avg_hr: avg, max_hr: max, calories: cals, zones, zonesSource, type: inferType(w), suspicious, source: 'import' };
   });
 }
@@ -371,9 +372,15 @@ export default function BadmintonOS() {
   const [healthImportText, setHealthImportText] = useState('');
   const [healthImportError, setHealthImportError] = useState('');
   const [healthFileName, setHealthFileName] = useState('');
+  const [showPhotoImport, setShowPhotoImport] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
+  const [photoDraft, setPhotoDraft] = useState(null);
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const healthFileInputRef = useRef(null);
+  const photoFileInputRef = useRef(null);
 
   useEffect(() => {
     const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = FONT_LINK; document.head.appendChild(link);
@@ -509,6 +516,78 @@ export default function BadmintonOS() {
       }
       setWorkouts((w) => [...w, ...parsed]); setShowImport(false); setImportText(''); setFileName('');
     } catch (e) { setImportError(e.message); }
+  }
+  // Downscales to keep upload fast and cheap -- screenshots don't need full camera resolution for the model to read on-screen text.
+  function resizeImageFile(file, maxDim = 1024, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read that image.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not decode that image.'));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width >= height) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+            else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const [prefix, base64] = dataUrl.split(',');
+          resolve({ base64, mimeType: prefix.match(/data:(.*);base64/)?.[1] || 'image/jpeg', dataUrl });
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  async function handlePhotoFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoError(''); setPhotoDraft(null); setPhotoBusy(true);
+    try {
+      const { base64, mimeType, dataUrl } = await resizeImageFile(file);
+      setPhotoPreviewUrl(dataUrl);
+      const res = await fetch('/api/extract-workout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || `Extraction failed (${res.status})`);
+      const ex = data?.extracted || {};
+      setPhotoDraft({
+        date: ex.date || new Date().toISOString().slice(0, 10),
+        duration_min: ex.duration_min ?? '',
+        avg_hr: ex.avg_hr ?? '',
+        max_hr: ex.max_hr ?? '',
+        calories: ex.calories ?? '',
+        type: ex.type || 'drill',
+      });
+    } catch (err) {
+      setPhotoError(err.message || 'Could not read that screenshot — try a clearer photo, or use structured import instead.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+  function updatePhotoDraft(key, value) { setPhotoDraft((d) => ({ ...d, [key]: value })); }
+  function closePhotoImport() {
+    setShowPhotoImport(false); setPhotoDraft(null); setPhotoError(''); setPhotoPreviewUrl(''); setPhotoBusy(false);
+  }
+  function confirmPhotoImport() {
+    const dur = Math.round(Number(photoDraft.duration_min));
+    if (!photoDraft.date || !dur || dur <= 0) { setPhotoError('Duration is required and must be a positive number.'); return; }
+    const avg = Math.round(Number(photoDraft.avg_hr)) || 130;
+    const max = Math.round(Number(photoDraft.max_hr)) || avg + 30;
+    const cals = Math.round(Number(photoDraft.calories)) || Math.round(dur * 9);
+    const workout = {
+      id: uid(), date: photoDraft.date, duration_min: dur, avg_hr: avg, max_hr: max, calories: cals,
+      zones: estimateZonesFromAvgHR(dur, avg), zonesSource: 'photo', type: photoDraft.type || 'drill', source: 'photo',
+    };
+    setWorkouts((w) => [...w, workout]);
+    closePhotoImport();
   }
   function removeAll() { setWorkouts([]); }
   function toggleCompare(id) {
@@ -731,6 +810,9 @@ export default function BadmintonOS() {
           </button>
           <button onClick={() => setShowHealthImport(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COL.panelAlt, border: `1px solid ${COL.inkDim}33`, color: COL.ink, padding: '9px 14px', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>
             <Heart size={15} /> Health data
+          </button>
+          <button onClick={() => setShowPhotoImport(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COL.panelAlt, border: `1px solid ${COL.inkDim}33`, color: COL.ink, padding: '9px 14px', borderRadius: 6, fontSize: 13, fontWeight: 500 }}>
+            <Camera size={15} /> Photo
           </button>
         </div>
       </div>
@@ -1041,6 +1123,71 @@ export default function BadmintonOS() {
         </div>
       )}
 
+      {showPhotoImport && (
+        <div style={{ position: 'fixed', inset: 0, background: '#000000aa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 10 }}>
+          <div style={{ background: COL.panel, border: `1px solid ${COL.net}`, borderRadius: 10, padding: 22, maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="disp" style={{ fontSize: 18 }}>Add from a photo</div>
+              <button onClick={closePhotoImport} style={{ background: 'none', border: 'none', color: COL.inkDim }}><X size={18} /></button>
+            </div>
+            <div style={{ fontSize: 11, color: COL.inkDim, background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, padding: 10, marginBottom: 12 }}>
+              A screenshot can't be read as precisely as structured data. Every field below is a best guess — check the numbers before adding, especially if you'll be trusting the injury-risk read on this session.
+            </div>
+
+            {!photoDraft && (
+              <>
+                <input ref={photoFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoFileSelect} />
+                <button onClick={() => photoFileInputRef.current?.click()} disabled={photoBusy} style={{ width: '100%', background: COL.panelAlt, border: `1px dashed ${COL.inkDim}66`, color: COL.ink, padding: '16px 14px', borderRadius: 6, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: photoBusy ? 0.6 : 1 }}>
+                  <Camera size={16} /> {photoBusy ? 'Reading screenshot…' : 'Choose a screenshot'}
+                </button>
+                {photoError && <div style={{ color: COL.shuttle, fontSize: 12, marginTop: 10 }}>{photoError}</div>}
+              </>
+            )}
+
+            {photoDraft && (
+              <>
+                {photoPreviewUrl && <img src={photoPreviewUrl} alt="Selected screenshot" style={{ width: '100%', maxHeight: 160, objectFit: 'contain', borderRadius: 6, border: `1px solid ${COL.net}`, marginBottom: 12, background: COL.court }} />}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Date</label>
+                    <input type="date" value={photoDraft.date} onChange={(e) => updatePhotoDraft('date', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Duration (min)</label>
+                    <input type="number" value={photoDraft.duration_min} onChange={(e) => updatePhotoDraft('duration_min', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Avg HR</label>
+                    <input type="number" value={photoDraft.avg_hr} onChange={(e) => updatePhotoDraft('avg_hr', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Max HR</label>
+                    <input type="number" value={photoDraft.max_hr} onChange={(e) => updatePhotoDraft('max_hr', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Calories</label>
+                    <input type="number" value={photoDraft.calories} onChange={(e) => updatePhotoDraft('calories', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: COL.inkDim, display: 'block', marginBottom: 4 }}>Type</label>
+                    <select value={photoDraft.type} onChange={(e) => updatePhotoDraft('type', e.target.value)} style={{ width: '100%', background: COL.court, border: `1px solid ${COL.net}`, borderRadius: 6, color: COL.ink, padding: 8, fontSize: 13, boxSizing: 'border-box' }}>
+                      <option value="drill">Drill</option>
+                      <option value="match">Match</option>
+                      <option value="social">Social</option>
+                    </select>
+                  </div>
+                </div>
+                {photoError && <div style={{ color: COL.shuttle, fontSize: 12, marginBottom: 10 }}>{photoError}</div>}
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={closePhotoImport} style={{ background: 'transparent', border: `1px solid ${COL.inkDim}55`, color: COL.inkDim, padding: '8px 14px', borderRadius: 6, fontSize: 13 }}>Cancel</button>
+                  <button onClick={confirmPhotoImport} style={{ background: COL.shuttle, border: 'none', color: '#fff', padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>Looks right — add it</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {selected && (
         <div style={{ position: 'fixed', inset: 0, background: '#000000aa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 10 }} onClick={() => setSelected(null)}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: COL.panel, border: `1px solid ${COL.net}`, borderRadius: 10, padding: 22, maxWidth: 420, width: '100%' }}>
@@ -1070,6 +1217,7 @@ function ZoneBadge({ source, verbose }) {
     measured: { text: verbose ? 'Zones measured from HR samples' : 'measured', color: COL.zone[1] },
     estimated: { text: verbose ? 'Zones estimated from avg/max HR only — not real sample data' : 'estimated', color: COL.shuttle },
     sample: { text: verbose ? 'Fabricated demo data — not a real workout' : 'demo', color: COL.inkDim },
+    photo: { text: verbose ? 'Entered from a photo — numbers were reviewed but not device-measured' : 'photo', color: COL.zone[3] },
   };
   const m = map[source] || map.estimated;
   return (<div title={m.text} style={{ fontSize: 9, color: m.color, border: `1px solid ${m.color}66`, borderRadius: 4, padding: verbose ? '3px 8px' : '1px 6px', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{m.text}</div>);
